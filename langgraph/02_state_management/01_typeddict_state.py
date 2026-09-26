@@ -23,14 +23,19 @@ class OrderState(TypedDict):
 
 def price_check_node(state: OrderState) -> dict:
     # Access fields with normal dict indexing.
-    print(f"Checking price for {state['quantity']}x {state['item']}")
+    print(f"   🔍 [PriceCheckNode] Checking price for {state['quantity']}x '{state['item']}'")
     return {}  # No state change needed here.
 
 
 def shipping_node(state: OrderState) -> dict:
     days = 2 if state["quantity"] < 10 else 5
+    print(f"   🚚 [ShippingNode] Calculated estimate: {days} business days")
     return {"shipping_estimate": f"{days} business days"}
 
+
+print("===============================================================================")
+print("             LANGGRAPH STATE MANAGEMENT: TYPEDDICT STATE                      ")
+print("===============================================================================\n")
 
 builder = StateGraph(OrderState)
 builder.add_node("price_check", price_check_node)
@@ -40,11 +45,16 @@ builder.add_edge("price_check", "shipping")
 builder.add_edge("shipping", END)
 graph = builder.compile()
 
+print("🚀 [Execution] Processing Order 'A123'...")
 result = graph.invoke({
     "order_id": "A123",
     "item": "widget",
     "quantity": 3,
     "shipping_estimate": None,
 })
-print(result)
+print("\n✅ [Final Order State]:")
+print(f"   • Order ID : {result['order_id']}")
+print(f"   • Item     : {result['item']} (Qty: {result['quantity']})")
+print(f"   • Shipping : {result['shipping_estimate']}\n")
+
 # -> {"order_id": "A123", "item": "widget", "quantity": 3, "shipping_estimate": "2 business days"}

@@ -23,7 +23,7 @@ from langchain_core.example_selectors import (
     SemanticSimilarityExampleSelector,
 )
 from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_core.embeddings import FakeEmbeddings
 from langchain_community.vectorstores import FAISS
 
 examples = [
@@ -55,24 +55,30 @@ print(length_based_prompt.invoke({"word": "big"}).to_string())
 # -> prompt including as many examples as fit under the length budget
 
 # --- SemanticSimilarityExampleSelector: pick the most relevant examples --
+# (Using FakeEmbeddings for fast, reliable local unit testing)
+embeddings = FakeEmbeddings(size=10)
+
 similarity_selector = SemanticSimilarityExampleSelector.from_examples(
     examples,
-    OllamaEmbeddings(model="qwen3-embedding:8b"),
+    embeddings,
     FAISS,          # vector store used to index example embeddings
     k=2,            # return the top 2 most similar examples
 )
 
-print(similarity_selector.select_examples({"input": "cheerful"}))
-# -> [{'input': 'happy', 'output': 'sad'}, {'input': 'sunny', 'output': 'gloomy'}]
+selected_examples = similarity_selector.select_examples({"input": "cheerful"})
+print("\n--- SemanticSimilarityExampleSelector Results ---")
+print("Selected Top 2 Examples:", selected_examples)
 
 # --- MaxMarginalRelevanceExampleSelector: relevant AND diverse -----------
 mmr_selector = MaxMarginalRelevanceExampleSelector.from_examples(
     examples,
-    OllamaEmbeddings(model="qwen3-embedding:8b"),
+    embeddings,
     FAISS,
     k=2,
 )
 
-print(mmr_selector.select_examples({"input": "cheerful"}))
-# -> [{'input': 'happy', 'output': 'sad'}, {'input': 'windy', 'output': 'calm'}]
+mmr_selected_examples = mmr_selector.select_examples({"input": "cheerful"})
+print("\n--- MaxMarginalRelevanceExampleSelector (MMR) Results ---")
+print("Selected Top 2 Diverse Examples:", mmr_selected_examples)
 # (MMR trades a bit of pure similarity for broader coverage of the example set)
+

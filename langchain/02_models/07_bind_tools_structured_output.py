@@ -16,9 +16,9 @@ Use bind_tools when the model needs to decide *whether* to act. Use
 with_structured_output when you always want a specific shaped answer.
 """
 
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_core.tools import tool
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 
 model = ChatOllama(model="qwen2.5:1.5b", temperature=0)
 

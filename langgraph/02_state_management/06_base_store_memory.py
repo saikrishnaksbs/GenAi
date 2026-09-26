@@ -73,21 +73,25 @@ graph = builder.compile(
     store=global_store
 )
 
+print("===============================================================================")
+print("         LANGGRAPH STATE MANAGEMENT: BASESTORE & INMEMORYSTORE                 ")
+print("===============================================================================\n")
+
 # --------------------------------------------------------------------------
 # Verify Cross-Thread Persistence
 # --------------------------------------------------------------------------
 # User ID is 'user_alice'
 user_info = {"user_id": "user_alice", "user_input": "", "response": ""}
 
-print("--- Step 1: Tell graph our name on Thread 1 ---")
+print("💬 [Thread 1 (session-1)] Store user name preference:")
 config_thread_1 = {"configurable": {"thread_id": "session-1"}}
 res1 = graph.invoke(
     {**user_info, "user_input": "Hello! My name is Alice."},
     config=config_thread_1
 )
-print(f"Agent response: {res1['response']}")
+print(f"   🤖 Agent Response: {res1['response']}")
 
-print("\n--- Step 2: Query graph on a completely new thread (Thread 2) ---")
+print("\n💬 [Thread 2 (session-2)] Access profile on a NEW thread ID:")
 # Thread 2 is brand new, but we keep 'user_id' as 'user_alice'
 config_thread_2 = {"configurable": {"thread_id": "session-2"}}
 res2 = graph.invoke(
@@ -95,4 +99,5 @@ res2 = graph.invoke(
     config=config_thread_2
 )
 # The agent should know our name is Alice because the store is shared cross-thread!
-print(f"Agent response: {res2['response']}")
+print(f"   🤖 Agent Response: {res2['response']}\n")
+

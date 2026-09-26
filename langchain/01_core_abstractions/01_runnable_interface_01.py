@@ -5,7 +5,7 @@ This shows RunnableLambda used for pre/post-processing around a real LLM,
 combined using LCEL (|), with proper streaming and error handling.
 """
 
-from langchain_core.runnables import RunnableLambda, RunnableConfig
+from langchain_core.runnables import RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import ChatOllama
 

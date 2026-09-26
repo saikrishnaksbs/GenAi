@@ -35,11 +35,21 @@ builder.add_edge(START, "research")
 builder.add_edge("research", "summarize")
 builder.add_edge("summarize", END)
 
+print("===============================================================================")
+print("             LANGGRAPH FUNDAMENTALS: STATEGRAPH, NODES & EDGES                 ")
+print("===============================================================================\n")
+
 graph = builder.compile()
 
+print("🚀 [Execution] Invoking compiled graph with initial state...")
 result = graph.invoke({"question": "What is LangGraph?", "answer": ""})
-print(result)
-# -> {"question": "What is LangGraph?", "answer": "Researching: What is LangGraph? -> summarized."}
+print("   ➡️ Final Output State:")
+print(f"      • Question : {result['question']}")
+print(f"      • Answer   : {result['answer']}\n")
 
 # You can also visualize the compiled graph structure:
+print("-------------------------------------------------------------------------------")
+print("📊 [Graph Structure ASCII Visualization]:")
+print("-------------------------------------------------------------------------------")
 print(graph.get_graph().draw_ascii())
+

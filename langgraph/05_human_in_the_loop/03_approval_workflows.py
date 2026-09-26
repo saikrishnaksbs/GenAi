@@ -1,6 +1,6 @@
 """
-Approval Workflows: Approve/Reject a Tool Call
-==================================================
+Approval Workflows: Approve/Reject a Tool Call (Interactive Terminal Interrupt)
+================================================================================
 A common human-in-the-loop pattern is pausing right before a sensitive
 tool executes (e.g. sending money, deleting data), letting a human
 approve or reject it, then routing accordingly. This combines
@@ -32,11 +32,11 @@ def await_approval(state: State) -> dict:
 
 
 def execute_action(state: State) -> dict:
-    return {"result": f"Executed: {state['action']}"}
+    return {"result": f"SUCCESS: Executed action: {state['action']}"}
 
 
 def reject_action(state: State) -> dict:
-    return {"result": f"Rejected: {state['action']}"}
+    return {"result": f"CANCELLED: Rejected action: {state['action']}"}
 
 
 def route_on_decision(state: State) -> Literal["execute_action", "reject_action"]:
@@ -59,15 +59,30 @@ builder.add_edge("reject_action", END)
 graph = builder.compile(checkpointer=MemorySaver(), interrupt_before=["await_approval"])
 
 config = {"configurable": {"thread_id": "txn-1"}}
+
+print("=== 1. Invoking Graph (Runs until await_approval gate) ===")
 graph.invoke({"action": "", "amount": 5000.0, "decision": "", "result": ""}, config=config)
 
 snapshot = graph.get_state(config)
-print(snapshot.next)
-# -> ("await_approval",)  paused, waiting for a human decision
+print(f"\n[INTERRUPT DETECTED] Paused before gate node: {snapshot.next}")
+action_details = snapshot.values.get("action")
+print(f"Proposed Action: {action_details}")
 
-# A human reviews the proposed action and rejects it.
-graph.update_state(config, {"decision": "reject"})
+# --- REAL TERMINAL INTERRUPT ---
+print("\n--- HUMAN APPROVAL GATE ---")
+user_input = input(f"Do you approve '{action_details}'? [(a)pprove / (r)eject]: ").strip().lower()
 
+if user_input in ["a", "approve", "yes"]:
+    decision = "approve"
+    print("-> Human decision: APPROVED")
+else:
+    decision = "reject"
+    print("-> Human decision: REJECTED")
+
+# Update state with human decision before resuming
+graph.update_state(config, {"decision": decision})
+
+print("\n=== 2. Resuming Graph Execution ===")
 final = graph.invoke(None, config=config)
-print(final["result"])
-# -> "Rejected: transfer $5000.0"
+print(f"Final Action Output: {final['result']}")
+

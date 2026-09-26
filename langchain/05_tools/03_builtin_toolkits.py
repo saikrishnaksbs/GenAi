@@ -47,21 +47,36 @@ requests_wrapper = TextRequestsWrapper(headers={"User-Agent": "langchain-example
 get_tool = RequestsGetTool(requests_wrapper=requests_wrapper, allow_dangerous_requests=True)
 # `allow_dangerous_requests=True` is required because this tool lets the
 # model trigger arbitrary outbound HTTP GET requests.
-response_text = get_tool.invoke("https://api.example.com/status")
-print(response_text[:50])
-# -> '{"status": "ok", "uptime_seconds": 123456, ...'
+try:
+    # Attempt to request httpbin.org which is a reliable public echo/testing service.
+    # Note: If you don't have internet access, this call will fail gracefully.
+    response_text = get_tool.invoke("https://httpbin.org/get")
+    print("HTTP GET Response:")
+    print(response_text[:100] + "...")
+except Exception as e:
+    print(f"HTTP GET request failed: {e}")
+    print("Fallback mock response for demonstration:")
+    response_text = '{"status": "ok", "uptime_seconds": 123456}'
+    print(response_text[:50])
 
 
 # --- Hosted search API tool (Tavily) --------------------------------------
 # Requires TAVILY_API_KEY in the environment. This is a common "search the
 # web" tool used in agent examples since it returns clean, LLM-ready results.
-search_tool = TavilySearchResults(max_results=3)
-results = search_tool.invoke("latest LangChain release notes")
-print(results)
-# -> [{"url": "https://...", "content": "LangChain v0.3 introduces ..."}, ...]
+search_tool = None
+try:
+    search_tool = TavilySearchResults(max_results=3)
+    results = search_tool.invoke("latest LangChain release notes")
+    print("Tavily Search Results:")
+    print(results)
+except Exception as e:
+    print(f"Tavily search tool skipped/failed (requires TAVILY_API_KEY env var): {e}")
 
 # Toolkits and individual tools compose the same way — you pass a flat
 # list of tools to an agent regardless of which toolkit they came from.
-all_tools = sql_tools + [python_tool, get_tool, search_tool]
-print(len(all_tools))
-# -> 7
+additional_tools = [python_tool, get_tool]
+if search_tool is not None:
+    additional_tools.append(search_tool)
+all_tools = sql_tools + additional_tools
+print(f"Total tools loaded: {len(all_tools)}")
+

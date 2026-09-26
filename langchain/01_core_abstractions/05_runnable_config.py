@@ -31,10 +31,3 @@ config: RunnableConfig = {
 }
 
 result = chain.invoke({"name": "Sai"}, config=config)
-
-# Tags/metadata propagate to every nested Runnable inside the chain, which is
-# how tracing tools like LangSmith group and filter related runs.
-
-# You can also bind config permanently to a chain so callers don't need to pass it:
-configured_chain = chain.with_config(tags=["always-tagged"])
-configured_chain.invoke({"name": "Team"})

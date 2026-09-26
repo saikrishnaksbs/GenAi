@@ -44,16 +44,22 @@ def sentiment_node(state: PipelineState) -> dict:
     return {"sentiment": "positive" if has_positive else "neutral"}
 
 
+print("===============================================================================")
+print("          LANGGRAPH STATE MANAGEMENT: PARTIAL STATE UPDATES                    ")
+print("===============================================================================\n")
+
 builder = StateGraph(PipelineState)
 builder.add_node("clean", clean_node)
 builder.add_node("count", count_node)
-builder.add_node("sentiment", sentiment_node)
+builder.add_node("analyze_sentiment", sentiment_node)
 builder.add_edge(START, "clean")
 builder.add_edge("clean", "count")
-builder.add_edge("count", "sentiment")
-builder.add_edge("sentiment", END)
+builder.add_edge("count", "analyze_sentiment")
+builder.add_edge("analyze_sentiment", END)
+
 graph = builder.compile()
 
+print("⚡ [Pipeline Execution] Processing raw input text...")
 result = graph.invoke({
     "raw_text": "  This is Great stuff  ",
     "cleaned_text": "",
@@ -61,7 +67,13 @@ result = graph.invoke({
     "warnings": [],
     "sentiment": "",
 })
-print(result)
+print("\n📊 [Final Pipeline State (Channels Merged)]:")
+print(f"   • Raw Text     : '{result['raw_text']}'")
+print(f"   • Cleaned Text : '{result['cleaned_text']}'")
+print(f"   • Word Count   : {result['word_count']}")
+print(f"   • Warnings     : {result['warnings']}")
+print(f"   • Sentiment    : {result['sentiment']}\n")
+
 # -> {
 #      "raw_text": "  This is Great stuff  ",
 #      "cleaned_text": "this is great stuff",

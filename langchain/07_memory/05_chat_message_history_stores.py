@@ -27,16 +27,23 @@ print(in_memory_history.messages)
 # --- 2. Redis-backed store: shared across app instances, fast, TTL-capable ---
 # Requires: pip install langchain-redis redis
 from langchain_redis import RedisChatMessageHistory
+import redis
 
-redis_history = RedisChatMessageHistory(
-    session_id="user-123",
-    redis_url="redis://localhost:6379/0",
-    ttl=3600,  # optional: auto-expire the conversation after 1 hour of inactivity
-)
-redis_history.add_message(HumanMessage(content="What's the weather like?"))
-redis_history.add_message(AIMessage(content="I don't have live weather access."))
-# Messages are serialized to Redis under a key derived from session_id, so
-# any process pointing at the same Redis instance sees the same history.
+print("\n--- 2. Testing Redis Message History Store ---")
+try:
+    redis_history = RedisChatMessageHistory(
+        session_id="user-123",
+        redis_url="redis://localhost:6379/0",
+        ttl=3600,  # optional: auto-expire the conversation after 1 hour of inactivity
+    )
+    redis_history.add_message(HumanMessage(content="What's the weather like?"))
+    redis_history.add_message(AIMessage(content="I don't have live weather access."))
+    print("Redis messages:", redis_history.messages)
+    # Messages are serialized to Redis under a key derived from session_id, so
+    # any process pointing at the same Redis instance sees the same history.
+except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+    print(f"Skipped/Failed to connect to Redis: {e}")
+    print("Note: To run this step, ensure a local Redis server is running at localhost:6379")
 
 
 # --- 3. Postgres-backed store: durable, survives restarts, queryable via SQL ---
@@ -44,21 +51,26 @@ redis_history.add_message(AIMessage(content="I don't have live weather access.")
 from langchain_postgres import PostgresChatMessageHistory
 import psycopg
 
-sync_connection = psycopg.connect("postgresql://user:password@localhost:5432/chatdb")
+print("\n--- 3. Testing Postgres Message History Store ---")
+try:
+    sync_connection = psycopg.connect("postgresql://user:password@localhost:5432/chatdb", connect_timeout=2)
+    
+    # One-time setup: creates the message table if it doesn't already exist
+    PostgresChatMessageHistory.create_tables(sync_connection, "chat_history")
+    
+    postgres_history = PostgresChatMessageHistory(
+        "chat_history",       # table name
+        "user-123",            # session_id
+        sync_connection=sync_connection,
+    )
+    postgres_history.add_messages(
+        [HumanMessage(content="Remember that I'm vegetarian.")]
+    )
+    
+    print("Postgres messages:", postgres_history.messages)
+    # On the next app restart, this same query returns the same messages, since
+    # they're persisted as rows in the "chat_history" Postgres table.
+except psycopg.OperationalError as e:
+    print(f"Skipped/Failed to connect to Postgres: {e}")
+    print("Note: To run this step, ensure a local PostgreSQL instance is running at localhost:5432")
 
-# One-time setup: creates the message table if it doesn't already exist
-PostgresChatMessageHistory.create_tables(sync_connection, "chat_history")
-
-postgres_history = PostgresChatMessageHistory(
-    "chat_history",       # table name
-    "user-123",            # session_id
-    sync_connection=sync_connection,
-)
-postgres_history.add_messages(
-    [HumanMessage(content="Remember that I'm vegetarian.")]
-)
-
-print(postgres_history.messages)
-# -> [HumanMessage(content="Remember that I'm vegetarian.")]
-# On the next app restart, this same query returns the same messages, since
-# they're persisted as rows in the "chat_history" Postgres table.

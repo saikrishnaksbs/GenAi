@@ -55,13 +55,21 @@ builder.add_conditional_edges(
     },
 )
 
+print("===============================================================================")
+print("                LANGGRAPH FUNDAMENTALS: CYCLES & RETRY LOOPS                   ")
+print("===============================================================================\n")
+
 graph = builder.compile()
 
+print("🔄 [Scenario 1] Standard Retry Loop (max_attempts = 5):")
 result = graph.invoke({"attempts": 0, "max_attempts": 5, "success": False, "result": ""})
-print(result)
-# -> {"attempts": 3, "max_attempts": 5, "success": True, "result": "done"}
+print(f"   • Attempts Taken : {result['attempts']}")
+print(f"   • Success Status : {result['success']}")
+print(f"   • Final Result   : {result['result']}\n")
 
-# If max_attempts were 2, the loop would exit via "give_up" with success=False.
+print("🛑 [Scenario 2] Max Attempts Exceeded Loop (max_attempts = 2):")
 give_up_result = graph.invoke({"attempts": 0, "max_attempts": 2, "success": False, "result": ""})
-print(give_up_result)
-# -> {"attempts": 2, "max_attempts": 2, "success": False, "result": "failed"}
+print(f"   • Attempts Taken : {give_up_result['attempts']}")
+print(f"   • Success Status : {give_up_result['success']}")
+print(f"   • Final Result   : {give_up_result['result']}\n")
+

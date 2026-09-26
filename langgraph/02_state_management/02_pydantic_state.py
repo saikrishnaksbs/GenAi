@@ -38,6 +38,10 @@ def resolve_node(state: SupportTicketState) -> dict:
     return {"resolved": state.priority >= 4}  # Pretend low-priority tickets auto-resolve.
 
 
+print("===============================================================================")
+print("            LANGGRAPH STATE MANAGEMENT: PYDANTIC BASEMODEL                     ")
+print("===============================================================================\n")
+
 builder = StateGraph(SupportTicketState)
 builder.add_node("triage", triage_node)
 builder.add_node("resolve", resolve_node)
@@ -46,14 +50,16 @@ builder.add_edge("triage", "resolve")
 builder.add_edge("resolve", END)
 graph = builder.compile()
 
-# Input can be passed as a dict or a model instance; LangGraph validates it.
+print("🎫 [Valid Input Execution] Submitting Support Ticket:")
 result = graph.invoke(SupportTicketState(subject="Production database is down"))
-print(result)
-# -> {"subject": "Production database is down", "priority": 1, "resolved": False}
+print(f"   • Subject  : '{result['subject']}'")
+print(f"   • Priority : {result['priority']} (1=Highest, 5=Lowest)")
+print(f"   • Resolved : {result['resolved']}\n")
 
-# Invalid input raises a validation error before any node runs.
+
+print("❌ [Invalid Input Test] Submitting empty subject (Triggers Validation Error):")
 try:
     graph.invoke({"subject": "", "priority": 3, "resolved": False})
 except Exception as exc:
-    print(type(exc).__name__)
-    # -> ValidationError (or wrapped equivalent, depending on LangGraph version)
+    print(f"   ⚠️ Caught expected exception: {type(exc).__name__} ({exc})\n")
+

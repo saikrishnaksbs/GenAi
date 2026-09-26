@@ -34,22 +34,27 @@ def increment_node(state: State, config: dict) -> dict:
 builder = StateGraph(State, config_schema=ConfigSchema)
 builder.add_node("increment", increment_node)
 builder.add_edge(START, "increment")
-builder.add_edge("increment", "increment")  # Intentional cycle for demo purposes.
 builder.add_edge("increment", END)
+
+
+print("===============================================================================")
+print("          LANGGRAPH FUNDAMENTALS: COMPILING & RECURSION LIMITS                ")
+print("===============================================================================\n")
 
 # compile() turns the builder into an executable graph. Nothing runs until
 # this call - it just wires and validates the structure.
 graph = builder.compile()
 
+print("⚙️ [Config Execution] Invoking graph with per-invocation config (multiplier=3):")
 result = graph.invoke(
     {"count": 0},
     config={"configurable": {"multiplier": 3}},
 )
-print(result)
-# -> {"count": 3}
+print(f"   • Final Count: {result['count']}\n")
 
 # recursion_limit guards against runaway cycles (e.g. a loop that never
 # satisfies its exit condition). Exceeding it raises GraphRecursionError.
+print("🚨 [Recursion Limit Safety Test] Triggering infinite loop with limit=5:")
 try:
     unbounded_builder = StateGraph(State)
     unbounded_builder.add_node("increment", lambda s: {"count": s["count"] + 1})
@@ -58,5 +63,5 @@ try:
     unbounded_graph = unbounded_builder.compile()
     unbounded_graph.invoke({"count": 0}, config={"recursion_limit": 5})
 except Exception as exc:
-    print(type(exc).__name__)
-    # -> GraphRecursionError
+    print(f"   ⚠️ Caught expected exception: {type(exc).__name__} ({exc})\n")
+

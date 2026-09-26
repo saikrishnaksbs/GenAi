@@ -57,14 +57,25 @@ builder.add_conditional_edges(
 builder.add_edge("easy_answer", END)
 builder.add_edge("hard_answer", END)
 
+print("===============================================================================")
+print("             LANGGRAPH FUNDAMENTALS: CONDITIONAL EDGES & ROUTING               ")
+print("===============================================================================\n")
+
 graph = builder.compile()
 
-print(graph.invoke({"question": "What is 2+2?", "difficulty": "", "answer": ""}))
-# -> {..., "difficulty": "easy", "answer": "Quick heuristic answer."}
+print("🔀 [Test Case 1] Short Question (Route to Easy Answer):")
+res1 = graph.invoke({"question": "What is 2+2?", "difficulty": "", "answer": ""})
+print(f"   • Question   : {res1['question']}")
+print(f"   • Difficulty : {res1['difficulty']}")
+print(f"   • Answer     : {res1['answer']}\n")
 
-print(graph.invoke({
+print("🔀 [Test Case 2] Complex Question (Route to Hard Answer):")
+res2 = graph.invoke({
     "question": "Explain the trade-offs of eventual consistency in distributed databases",
     "difficulty": "",
     "answer": "",
-}))
-# -> {..., "difficulty": "hard", "answer": "Deep multi-step reasoning answer."}
+})
+print(f"   • Question   : {res2['question']}")
+print(f"   • Difficulty : {res2['difficulty']}")
+print(f"   • Answer     : {res2['answer']}\n")
+

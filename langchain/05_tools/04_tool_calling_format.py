@@ -13,7 +13,7 @@ Your code is responsible for running the tool and feeding the result back.
 
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import tool
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 
 
 @tool
@@ -64,5 +64,10 @@ print(final_response.content)
 # `bind_tools` also accepts `tool_choice` to force (or forbid) tool use:
 forced = model.bind_tools([get_stock_price], tool_choice="get_stock_price")
 forced_response = forced.invoke([HumanMessage("Never mind, just say hello.")])
-print(forced_response.tool_calls[0]["name"])
-# -> "get_stock_price"  (forced, even though the prompt didn't need it)
+if forced_response.tool_calls:
+    print(forced_response.tool_calls[0]["name"])
+    # -> "get_stock_price"  (forced, even though the prompt didn't need it)
+else:
+    print("No tool call returned. Note: Local Ollama/Qwen models may ignore tool_choice forcing.")
+    print(f"Response: {forced_response.content}")
+

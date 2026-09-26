@@ -31,6 +31,10 @@ def step_two(state: State) -> dict:
     return {"log": ["step_two ran"], "total_cost": 25}
 
 
+print("===============================================================================")
+print("            LANGGRAPH STATE MANAGEMENT: BUILT-IN & CUSTOM REDUCERS             ")
+print("===============================================================================\n")
+
 builder = StateGraph(State)
 builder.add_node("step_one", step_one)
 builder.add_node("step_two", step_two)
@@ -39,9 +43,10 @@ builder.add_edge("step_one", "step_two")
 builder.add_edge("step_two", END)
 graph = builder.compile()
 
+print("➕ [Built-in Reducer] operator.add (List Concatenation & Integer Sum):")
 result = graph.invoke({"log": [], "total_cost": 0})
-print(result)
-# -> {"log": ["step_one ran", "step_two ran"], "total_cost": 35}
+print(f"   • Accumulated Log : {result['log']}")
+print(f"   • Total Cost      : {result['total_cost']}\n")
 
 
 # --- Custom reducer: merge dictionaries, keeping the max value per key ---
@@ -72,5 +77,8 @@ score_builder.add_edge("scorer_a", "scorer_b")
 score_builder.add_edge("scorer_b", END)
 score_graph = score_builder.compile()
 
-print(score_graph.invoke({"scores": {}}))
+print("🎯 [Custom Reducer] merge_max_scores (Retains highest score per key):")
+score_res = score_graph.invoke({"scores": {}})
+print(f"   • Merged Scores   : {score_res['scores']}\n")
+
 # -> {"scores": {"relevance": 0.8, "clarity": 0.9}}  (max of each key kept)

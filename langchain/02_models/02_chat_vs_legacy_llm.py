@@ -24,6 +24,7 @@ legacy_result = legacy_llm.invoke("Write a haiku about databases.")
 print(legacy_result)
 # -> "Rows and columns hum\nqueries whisper through indexes\nsilence, then an answer"
 print(type(legacy_result))
+print()
 # -> <class 'str'>
 
 # --- Modern ChatModel interface: messages in, AIMessage out ------------
@@ -31,13 +32,19 @@ chat_model = ChatOllama(model="qwen2.5:1.5b", temperature=0)
 
 chat_result = chat_model.invoke("Write a haiku about databases.")
 print(chat_result)
+print()
+
 # -> AIMessage(content="Rows and columns hum\n...", response_metadata={...})
 print(type(chat_result))
+print()
+
 # -> <class 'langchain_core.messages.ai.AIMessage'>
 
 # ChatModel.invoke() also accepts a plain string as shorthand -- LangChain
 # wraps it into a single HumanMessage under the hood.
 print(chat_result.content)
+print()
+
 # -> "Rows and columns hum\nqueries whisper through indexes\nsilence, then an answer"
 
 # Both LLM and ChatModel implement the Runnable interface, so .stream(),

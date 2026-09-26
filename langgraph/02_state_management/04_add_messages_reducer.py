@@ -30,27 +30,35 @@ def chatbot_node(state: ChatState) -> dict:
     return {"messages": [response]}
 
 
+print("===============================================================================")
+print("            LANGGRAPH STATE MANAGEMENT: ADD_MESSAGES REDUCER                   ")
+print("===============================================================================\n")
+
 builder = StateGraph(ChatState)
 builder.add_node("chatbot", chatbot_node)
 builder.add_edge(START, "chatbot")
 builder.add_edge("chatbot", END)
 graph = builder.compile()
 
+print("💬 [Turn 1] User message sent:")
 state = {"messages": [HumanMessage(content="Hello there")]}
 result = graph.invoke(state)
 for msg in result["messages"]:
-    print(f"{msg.__class__.__name__}: {msg.content}")
-# -> HumanMessage: Hello there
-# -> AIMessage: You said: Hello there
+    role = "👤 Human" if isinstance(msg, HumanMessage) else "🤖 AI   "
+    print(f"   {role} : {msg.content}")
+print()
 
 # Multi-turn: pass the accumulated messages back in for the next turn.
+print("💬 [Turn 2] Follow-up message sent:")
 next_turn = graph.invoke({"messages": result["messages"] + [HumanMessage(content="And you?")]})
-print(next_turn["messages"][-1].content)
-# -> "You said: And you?"
+print(f"   🤖 AI Response : '{next_turn['messages'][-1].content}'\n")
 
 # Replacing a message by id instead of appending: give the new message
 # the same `.id` as an existing one and add_messages will overwrite it.
+print("✏️ [In-Place Edit] Replacing AI response by ID:")
 edited = AIMessage(content="Corrected response", id=result["messages"][-1].id)
 corrected = add_messages(result["messages"], [edited])
-print(len(corrected))
-# -> 2 (same length as before -- the edit replaced, it didn't append)
+print(f"   • Original Count  : {len(result['messages'])}")
+print(f"   • Count After Edit: {len(corrected)} (In-place edit replaced existing message)")
+print(f"   • Updated Message : '{corrected[-1].content}'\n")
+

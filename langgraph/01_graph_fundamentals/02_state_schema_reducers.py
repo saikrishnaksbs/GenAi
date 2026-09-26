@@ -36,6 +36,10 @@ def add_note_b(state: State) -> dict:
     return {"notes": ["second observation"]}
 
 
+print("===============================================================================")
+print("            LANGGRAPH FUNDAMENTALS: STATE SCHEMAS & REDUCERS                   ")
+print("===============================================================================\n")
+
 builder = StateGraph(State)
 builder.add_node("note_a", add_note_a)
 builder.add_node("note_b", add_note_b)
@@ -44,9 +48,11 @@ builder.add_edge("note_a", "note_b")
 builder.add_edge("note_b", END)
 graph = builder.compile()
 
+print("🔹 [Option A] TypedDict State with operator.add Reducer:")
 result = graph.invoke({"topic": "demo", "notes": [], "messages": [HumanMessage("hi")]})
-print(result["notes"])
-# -> ["first observation", "second observation"]  (accumulated, not overwritten)
+print(f"   • Topic             : {result['topic']}")
+print(f"   • Accumulated Notes : {result['notes']}")
+print(f"   • Messages Count    : {len(result['messages'])}\n")
 
 
 # --- Option B: Pydantic BaseModel state ---
@@ -65,13 +71,18 @@ def add_note_p(state: PydanticState) -> dict:
 
 
 p_builder = StateGraph(PydanticState)
+
 p_builder.add_node("add_note", add_note_p)
 p_builder.add_edge(START, "add_note")
 p_builder.add_edge("add_note", END)
+
 p_graph = p_builder.compile()
 
+print("🔹 [Option B] Pydantic BaseModel State:")
 p_result = p_graph.invoke(PydanticState(topic="pydantic demo"))
-print(p_result)
+print(f"   • Topic : {p_result['topic']}")
+print(f"   • Notes : {p_result['notes']}\n")
+
 # -> {"topic": "pydantic demo", "notes": ["validated note about pydantic demo"]}
 
 

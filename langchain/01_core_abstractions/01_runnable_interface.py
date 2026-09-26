@@ -56,16 +56,20 @@ class ShoutOutput(BaseModel):
 
 # 1. Native stream/async generator function
 async def shout_async_stream(
-    input_data: Dict[str, Any], 
+    input_data: Any, 
     config: RunnableConfig
 ) -> AsyncIterator[str]:
     """
     Production-grade async generator function.
     - Yields chunks incrementally for real-time streaming.
     - Accepts RunnableConfig to propagate tracing/callbacks (e.g. LangSmith).
+    - Safely handles dict inputs (e.g. {"text": "..."}) and raw stream chunk inputs (str).
     """
-    text = input_data.get("text", "")
-    # Simulate processing or streaming word by word / chunk by chunk
+    if isinstance(input_data, dict):
+        text = input_data.get("text", "")
+    else:
+        text = str(input_data)
+
     words = text.split()
     for idx, word in enumerate(words):
         chunk = word.upper()
@@ -96,6 +100,35 @@ async def run_demo():
     async for chunk in production_shout_runnable.astream({"text": "streaming incremental data"}):
         print(f"Chunk: {repr(chunk)}")
 
+    # --- .transform() & .atransform() Stream Transformation Example ---
+    # .transform(stream) maps an input generator stream to an output stream.
+    print("\n--- Stream Transformation (.transform / .atransform) ---")
+    
+    def sync_token_stream():
+        yield "hello "
+        yield "world "
+        yield "lcel transform"
+
+    # Synchronous .transform(): 'shout_runnable' is a plain function (not a generator),
+    # so LangChain buffers the input stream and yields the single transformed output once.
+    print("Sync Transformed Stream (Buffered non-generator function):")
+    for chunk in shout_runnable.transform(sync_token_stream()):
+        print(f"Result: {chunk}")
+
+    async def async_token_stream():
+        yield "async "
+        yield "stream "
+        yield "transformation"
+
+    # Asynchronous .atransform(): 'production_shout_runnable' is a TRUE async generator (yields chunks),
+    # so it transforms and streams each chunk incrementally in real time as it arrives!
+    print("\nAsync Transformed Stream (Real-Time Generator Streaming):")
+    print("Live Stream Output: ", end="", flush=True)
+    async for chunk in production_shout_runnable.atransform(async_token_stream()):
+        print(chunk, end="", flush=True)
+    print("\n")
+
 # Run the async demo
 asyncio.run(run_demo())
+
 

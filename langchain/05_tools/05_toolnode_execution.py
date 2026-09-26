@@ -10,7 +10,7 @@ mechanics are clear, then show the LangGraph shortcut.
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 
 
 @tool

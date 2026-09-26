@@ -49,6 +49,16 @@ response = short_and_strict.invoke("Describe the ocean.")
 print(response.content)
 # -> "The ocean is a vast body of saltwater covering most of Earth's surface"
 
+# --- Reproducible outputs with seed parameter -----------------------------
+# Passing integer 'seed' forces the LLM's sampler to be deterministic.
+# Useful for unit tests, debugging, and auditability.
+seed_model = ChatOllama(model="qwen2.5:1.5b", temperature=0.7, seed=42)
+res1 = seed_model.invoke("Generate a random 3-word slogan for space exploration.")
+res2 = seed_model.invoke("Generate a random 3-word slogan for space exploration.")
+print(f"Seed Run 1: {res1.content}")
+print(f"Seed Run 2: {res2.content}")
+# Both runs yield identical text because seed=42 locks pseudo-random sampling.
+
 # Note: not every provider supports every parameter identically -- e.g.
 # some expose `stop_sequences` instead of `stop`. LangChain normalizes the
 # common ones, but check a provider's integration docs for edge cases.
